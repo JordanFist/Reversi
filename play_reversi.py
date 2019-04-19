@@ -1,6 +1,8 @@
 import Reversi
 import time
 from random import randint,choice
+from numpy import inf
+
 
 def get_winner(b):
     '''Fonction qui évalue la victoire (ou non) en tant que X. Renvoie 1 pour victoire, 0 pour 
@@ -44,8 +46,43 @@ def every_match(b):
         every_match(b)
         b.pop()
 
+def min_max(b, alpha, beta):
+
+    if b.is_game_over():
+        return get_winner(b)
+
+    best = inf
+    for i in b.legal_moves():
+        b.push(i)
+        best = min(best, max_min(b, alpha, beta))
+        beta = min(best, beta)
+        b.pop()
+        if beta <= alpha:
+            break;
+    print(b)
+    return best
+
+def max_min(b, alpha, beta):
+
+    if b.is_game_over():
+        return get_winner(b)
+
+    best = -inf
+    for i in b.legal_moves():
+        b.push(i)
+        best = max(best, min_max(b, alpha, beta))
+        alpha = max(best, alpha)
+        b.pop()
+        if beta <= alpha:
+            break;
+    print(b)
+    return best
+        
+        
 start = time.time()
 b = Reversi.Board(4)
-random_match(b)
+
+#random_match(b)
+min_max(b, -inf, inf)
 end = time.time()
 print(end-start)
