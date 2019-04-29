@@ -1,27 +1,49 @@
-import Reversi
-import time
+from Reversi import Board
+from time import time
 from random import randint,choice
 from numpy import inf
 
+####################################################################
+# Ceux à quoi on doit arriver sur ce fichier
+####################################################################
+from Reversi import Board
+from Stockfish import Stockfish
+from AlphaZero import AlphaZero
 
-def get_winner(b):
-    '''Fonction qui évalue la victoire (ou non) en tant que X. Renvoie 1 pour victoire, 0 pour 
-    égalité et -1 pour défaite. '''
-    score = b.get_nb_pieces()
-    if score[0] > score[1]:
-        return b._WHITE
-    elif score[1] > score[0]:
-        return b._BLACK
-    else:
-        return 0
+BOARD_SIZE = 8
 
+# stockfish joue en premier
+def match(board, stockfish, alphazero):
+    round = 0
+    while not (board.is_game_over()):
+        print(board)
+        if (round % 2 == 0):
+            board.push(stockfish.returnBestMove(board))
+            round += 1
+        else:
+            board.push(alphazero.returnBestMove(board))
+            round += 1
+
+    print(board.get_winner())
+
+board = Board(BOARD_SIZE)
+stockfish = Stockfish()
+alphazero = AlphaZero()
+
+
+####################################################################
+
+
+####################################################################
+# Ceux qui doit disparaitre
+####################################################################
 def random_move(b):
     return choice(b.legal_moves())
     
 def random_match(b):
     if b.is_game_over():
         print(b)
-        print(get_winner(b))
+        print(b.get_winner())
         return
 
     print(b)
@@ -38,7 +60,7 @@ def every_match(b):
     if b.is_game_over():
         #pieces = b.get_nb_pieces()
         #print(pieces)
-        get_winner(b)
+        b.get_winner()
         return
 
     for move in b.legal_moves():
@@ -49,7 +71,7 @@ def every_match(b):
 def min_max(b, alpha, beta):
 
     if b.is_game_over():
-        return get_winner(b)
+        return b.get_winner()
 
     best = inf
     for i in b.legal_moves():
@@ -65,7 +87,7 @@ def min_max(b, alpha, beta):
 def max_min(b, alpha, beta):
 
     if b.is_game_over():
-        return get_winner(b)
+        return b.get_winner()
 
     best = -inf
     for i in b.legal_moves():
@@ -79,10 +101,10 @@ def max_min(b, alpha, beta):
     return best
         
         
-start = time.time()
+start = time()
 b = Reversi.Board(4)
 
 #random_match(b)
 min_max(b, -inf, inf)
-end = time.time()
-print(end-start)
+end = time()
+print(end - start, 'secondes')

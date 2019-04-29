@@ -3,8 +3,7 @@
 ''' Fichier de règles du Reversi pour le tournoi Inge2 Enseirb en IA.
     Certaines parties de ce code sont fortement inspirée de 
     https://inventwithpython.com/chapter15.html
-
-    '''
+'''
 
 class Board:
     _BLACK = 1
@@ -45,6 +44,7 @@ class Board:
     def is_valid_move(self, player, x, y):
         return self.lazyTest_ValidMove(player,x,y)
 
+    # Indique si les coordonéees (x, y) sont sur le plateau
     def _isOnBoard(self,x,y):
         return x >= 0 and x < self._boardsize and y >= 0 and y < self._boardsize 
 
@@ -202,6 +202,16 @@ class Board:
             return self._nbWHITE - self._nbBLACK
         return self._nbBLACK - self._nbWHITE
 
+    # Retourne le gagnant de la partie
+    def get_winner(self):
+        score = self.get_nb_pieces()
+        if score[0] > score[1]:
+            return self._WHITE
+        elif score[1] > score[0]:
+            return self._BLACK
+        else:
+            return 0
+
     def _piece2str(self, c):
         if c==self._WHITE:
             return 'O'
@@ -210,6 +220,7 @@ class Board:
         else:
             return '.'
 
+    # print(board)
     def __str__(self):
         toreturn=""
         for l in self._board:
@@ -222,3 +233,5 @@ class Board:
 
     __repr__ = __str__
 
+b = Board()
+print(b)
