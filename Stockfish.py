@@ -11,18 +11,19 @@ class Stockfish:
         beta = inf
         best = alpha
 
+  #      print("no best move o player é o " + str(b._nextPlayer))
+
         for i in b.legal_moves():
             b.push(i)
-            best = max(best, self.max_min(b, alpha, beta))
-            
+            best = max(best, self.min_max(b, alpha, beta))
             if (best > alpha):
                 move = i
             alpha = max(best, alpha)
             b.pop()
             if beta <= alpha:
-                print(move, best)
+                break
 
-        print(move, best)
+        print("the best value for " + str(b._nextPlayer) + " is " + str(best))
         return move
 
     def random_move(b):
@@ -30,8 +31,9 @@ class Stockfish:
 
     def min_max(self, b, alpha, beta): # c'est au adversaire de jouer
 
-        if b.is_game_over(): 
-            return b.heuristique(b._nextPlayer)
+        if b.is_game_over():
+ #           print("a heuristica achou " + str(b.heuristique(b._nextPlayer)) + " pro " + str(b._nextPlayer))
+            return -b.heuristique()
                 
         best = inf
         for i in b.legal_moves():
@@ -47,7 +49,8 @@ class Stockfish:
     def max_min(self, b, alpha, beta): # c'est a toi de jouer
 
         if b.is_game_over():
-            return b.heuristique(b._nextPlayer)
+#            print("a heuristica achou " + str(b.heuristique(b._nextPlayer)) + " pro " + str(b._nextPlayer))
+            return b.heuristique()
 
         best = -inf
         for i in b.legal_moves():
@@ -59,6 +62,3 @@ class Stockfish:
                 break
         return best
 
-board = Board(4)
-stockfish = Stockfish()
-stockfish.return_best_move(board)
