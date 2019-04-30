@@ -206,11 +206,11 @@ class Board:
     def get_winner(self):
         score = self.get_nb_pieces()
         if score[0] > score[1]:
-            return self._WHITE
+            print("Whites win")
         elif score[1] > score[0]:
-            return self._BLACK
+            print("Blacks win")
         else:
-            return 0
+            print("Draw")
 
     def _piece2str(self, c):
         if c==self._WHITE:
@@ -232,6 +232,3 @@ class Board:
         return toreturn
 
     __repr__ = __str__
-
-b = Board()
-print(b)
