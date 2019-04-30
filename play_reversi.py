@@ -24,15 +24,12 @@ def match_vs_player(board, stockfish):
 
 # stockfish joue en premier
 def match(board, stockfish, alphazero):
-    round = 0
     while not (board.is_game_over()):
         print(board)
-        if (round % 2 == 0):
+        if board._nextPlayer == board._BLACK:
             board.push(stockfish.return_best_move(board))
-            round += 1
         else:
             board.push(alphazero.return_best_move(board))
-            round += 1
 
     board.get_winner()
 
