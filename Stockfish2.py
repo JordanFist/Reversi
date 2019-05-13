@@ -3,24 +3,45 @@ import time
 import math
 from random import randint,choice
 from numpy import inf
+import re
 
 
 class Stockfish2:
     
     _initial_depth = 2
     _last_duration = 0
+
+    UNKNOWN = -10000
     
     def __init__(self, player, size):
         self._player = player
         self._remaining_turns = size**2/2
         self._remaining_time = 300
         self._max_time = self._remaining_time/self._remaining_turns
+        self._dict = {}
+        
         self._coef = 3
 
-    def update_time(duration):
+        
+    def update_time(self, duration):
         self._remaining_time -= duration
         self._remaining_turns -= 1
         self._max_time = self._remaining_time/self._remaining_turns
+
+
+    def store_value(self, b, value):
+        key = re.sub('\ |\[|\]|\,', '', str(b._board))
+        self._dict[key] = value
+#        print("guardando em " + key)
+        
+    def load_value(self, b):
+        
+        key = re.sub('\ |\[|\]|\,', '', str(b._board))
+ #       print("catando em " + key)
+        if key in self._dict:
+            return self._dict[key]
+        else:
+            return self.UNKNOWN
 
         
     def getPlayerMove(self, b):
@@ -30,39 +51,55 @@ class Stockfish2:
         expo = 0
         estimated_duration = 0
         
-        while (estimated_duration < self._max_time):
+        while (duration < self._max_time/3):
             start = time.time()
             best = self.best_move(b, depth)
             end = time.time()
             duration += end-start
             depth += 1
             expo = math.log(duration, depth)
-            #estimated_duration = duration + depth**(expo+1)
-            #print("avec la prochaine ça prendrait " + str(estimated_duration))
-            #self._coef = 2*duration/((depth-1)**expo) # 2 to be verified
+            estimated_duration = duration + depth**(expo+0.5)
 
-        depth -= 1
-        print(str(50-self._remaining_turns) + ": " +str(depth)+ " in " + str(duration)+ "s")
-        #print("took " + str(duration) + "s at depth " + str(depth-1) + " which was " + str(self._coef) + "*" + str(depth-1) + "^" + str(expo))
+        print(str(50-self._remaining_turns) + ": " +str(depth-1)+ " in " + str(duration)+ "s")
 
-        update_time(duration)
+        self.update_time(duration)
 
-        #print("turn " + str(50-self._remaining_turns) + " and i still have " + str(self._remaining_time) + "(" + str(self._max_time) + " per turn)")        
+        
         return best
 
+
+    def order_moves(self, b, before):
+
+        moves = []
+        for i in before: # for each move
+            b.push(i) # we make the move
+            value = self.load_value(b) # we load its value
+            moves.append((i, value)) # we add it to a new list with the move and its value
+            b.pop() # we go back to the previous state of the board
+
+        rev = b._nextPlayer == self._player # if it's our turn (maxmin), we want it ordered descendingly
+        result = sorted(moves, key=lambda x: x[1], reverse=rev) 
+
+        return result
+        
     def best_move(self, b, depth):
         
         alpha = -inf
         beta = inf
         best = alpha
 
-        for i in b.legal_moves():
-            b.push(i)
+        moves = b.legal_moves()
+        ordered_moves = self.order_moves(b, moves)    
+        
+        for i in ordered_moves:
+            b.push(i[0])
             best = max(best, self.min_max(b, alpha, beta, depth-1))
+            
             if (best > alpha):
-                move = i
+                move = i[0]
             alpha = max(best, alpha)
             b.pop()
+            self.store_value(b, best)
             if beta <= alpha:
                 break
 
@@ -72,14 +109,22 @@ class Stockfish2:
     def min_max(self, b, alpha, beta, depth): # c'est au adversaire de jouer
         
         if b.is_game_over() or depth == 0:
-            return -self.heuristique(b)
+            value = -self.heuristique(b)
+            self.store_value(b, value)
+            return value
                 
         best = inf
-        for i in b.legal_moves():
-            b.push(i)
+
+        moves = b.legal_moves()
+        ordered_moves = self.order_moves(b, moves)    
+        
+        for i in ordered_moves:
+            b.push(i[0])
             best = min(best, self.max_min(b, alpha, beta, depth-1))
             beta = min(best, beta)
             b.pop()
+            self.store_value(b, best)
+            
             if beta <= alpha:
                 break
             
@@ -88,14 +133,22 @@ class Stockfish2:
     def max_min(self, b, alpha, beta, depth): # c'est a toi de jouer
         
         if b.is_game_over() or depth == 0:
-            return self.heuristique(b)
+            value = self.heuristique(b)
+            self.store_value(b, value)
+            return value
 
         best = -inf
-        for i in b.legal_moves():
-            b.push(i)
+
+        moves = b.legal_moves()
+        ordered_moves = self.order_moves(b, moves)    
+        
+        for i in ordered_moves:
+            b.push(i[0])
             best = max(best, self.min_max(b, alpha, beta, depth))
             alpha = max(best, alpha)
             b.pop()
+            self.store_value(b, best)
+            
             if beta <= alpha:
                 break
         return best
@@ -121,10 +174,10 @@ class Stockfish2:
         return len(b.legal_moves())
 
     def disks(self, b):
-        player = self._nextPlayer
-        if player is self._WHITE:
-            return self._nbWHITE - self._nbBLACK
-        return self._nbBLACK - self._nbWHITE
+        player = b._nextPlayer
+        if player is b._WHITE:
+            return b._nbWHITE - b._nbBLACK
+        return b._nbBLACK - b._nbWHITE
 
 
     def heuristique(self, b):
