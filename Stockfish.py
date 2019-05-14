@@ -51,7 +51,7 @@ class Stockfish:
         expo = 0
         estimated_duration = 0
         
-        while (duration < self._max_time/3):
+        while (depth < 5):
             start = time.time()
             best = self.best_move(b, depth)
             end = time.time()
@@ -60,7 +60,8 @@ class Stockfish:
             expo = math.log(duration, depth)
             estimated_duration = duration + depth**(expo+0.5)
 
-        print(str(50-self._remaining_turns) + ": " +str(depth-1)+ " in " + str(duration)+ "s")
+            
+        print("Stockfish: " + str(round(50-self._remaining_turns)) + " - " + str(duration)+ "s")
 
         self.update_time(duration)        
         return best

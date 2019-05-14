@@ -10,7 +10,7 @@ class Stockfish2:
     
     _initial_depth = 2
     _last_duration = 0
-
+    
     UNKNOWN = -10000
     
     def __init__(self, player, size):
@@ -32,12 +32,9 @@ class Stockfish2:
     def store_value(self, b, value):
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
         self._dict[key] = value
-#        print("guardando em " + key)
         
     def load_value(self, b):
-        
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
- #       print("catando em " + key)
         if key in self._dict:
             return self._dict[key]
         else:
@@ -51,7 +48,7 @@ class Stockfish2:
         expo = 0
         estimated_duration = 0
         
-        while (duration < self._max_time/3):
+        while (depth < 5):
             start = time.time()
             best = self.best_move(b, depth)
             end = time.time()
@@ -60,7 +57,7 @@ class Stockfish2:
             expo = math.log(duration, depth)
             estimated_duration = duration + depth**(expo+0.5)
 
-        print(str(50-self._remaining_turns) + ": " +str(depth-1)+ " in " + str(duration)+ "s")
+        print("Stockfish2: " + str(round(50-self._remaining_turns)) + " - " + str(duration)+ "s")
 
         self.update_time(duration)
 
@@ -99,10 +96,10 @@ class Stockfish2:
                 move = i[0]
             alpha = max(best, alpha)
             b.pop()
-            self.store_value(b, best)
             if beta <= alpha:
                 break
 
+        self.store_value(b, best)
         return move
 
 
@@ -123,11 +120,11 @@ class Stockfish2:
             best = min(best, self.max_min(b, alpha, beta, depth-1))
             beta = min(best, beta)
             b.pop()
-            self.store_value(b, best)
-            
+                    
             if beta <= alpha:
                 break
-            
+
+        self.store_value(b, best)
         return best
 
     def max_min(self, b, alpha, beta, depth): # c'est a toi de jouer
@@ -147,10 +144,11 @@ class Stockfish2:
             best = max(best, self.min_max(b, alpha, beta, depth))
             alpha = max(best, alpha)
             b.pop()
-            self.store_value(b, best)
             
             if beta <= alpha:
                 break
+
+        self.store_value(b, best)
         return best
 
 
@@ -171,7 +169,7 @@ class Stockfish2:
         return result
 
     def mobility(self, b):
-        return len(b.legal_moves())
+        return len(b.legal_moves()*2)
 
     def disks(self, b):
         player = b._nextPlayer
@@ -181,4 +179,6 @@ class Stockfish2:
 
 
     def heuristique(self, b):
-        return self.mobility(b)+self.corners(b)+self.disks(b)
+        value = self.mobility(b)+self.corners(b)+self.disks(b)
+        self.store_value(b, value)
+        return value
