@@ -7,12 +7,12 @@ import re
 
 
 class Stockfish2:
-    
-    _initial_depth = 2
+
+    _initial_depth = 3
     _last_duration = 0
-    
-    UNKNOWN_MAX = -10000
-    UNKNOWN_MIN = 10000
+
+    UNKNOWN_MAX = inf
+    UNKNOWN_MIN = -inf
 
     _turn = 0
     _visited_nodes = 0
@@ -22,10 +22,10 @@ class Stockfish2:
         self._remaining_time = 300
         self._max_time = self._remaining_time/self._remaining_turns
         self._dict = {}
-        
+
         self._coef = 3
 
-        
+
     def update_time(self, duration):
         self._remaining_time -= duration
         self._remaining_turns -= 1
@@ -36,7 +36,7 @@ class Stockfish2:
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
         #print("guardando " + str(value) + " em " + key)
         self._dict[key] = value
-        
+
     def load_value(self, b):
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
         if key in self._dict:
@@ -45,19 +45,19 @@ class Stockfish2:
         else:
             if self._player == b._nextPlayer: # c'est max qui joue
                 #print("li " + str(self.UNKNOWN_MIN) + " em " + key)
-                return self.UNKNOWN_MIN
+                return self.UNKNOWN_MAX
             else:
                 #print("li " + str(self.UNKNOWN_MAX) + " em " + key)
-                return self.UNKNOWN_MAX
-        
+                return self.UNKNOWN_MIN
+
     def getPlayerMove(self, b):
 
         duration = 0
         depth = self._initial_depth
         expo = 0
         estimated_duration = 0
-        
-        while (depth < 4):
+
+        while (depth < 6):
             start = time.time()
             best = self.search(b, depth)
             end = time.time()
@@ -74,6 +74,7 @@ class Stockfish2:
 
     def order_moves(self, b, before):
 
+
         self._visited_nodes += 1
         moves = []
         for i in before: # for each move
@@ -83,21 +84,23 @@ class Stockfish2:
             b.pop() # we go back to the previous state of the board
 
         rev = b._nextPlayer == self._player # if it's our turn (maxmin), we want it ordered descendingly
-        result = sorted(moves, key=lambda x: x[1], reverse=rev) 
-        #result = moves
+
+        result = sorted(moves, key=lambda x: x[1], reverse=rev)
+        #print(str(rev) + " " + str(result))
+        #return moves
         return result
-        
+
     def search(self, b, depth):
-        
+
         alpha = -inf
         beta = inf
         best = alpha
         #print("turn " + str(self._turn))
         self._turn += 1
-        
+
         moves = b.legal_moves()
-        ordered_moves = self.order_moves(b, moves)    
-        
+        ordered_moves = self.order_moves(b, moves)
+
         for i in ordered_moves:
             b.push(i[0])
             best = max(best, self.min_max(b, alpha, beta, depth-1))
@@ -116,21 +119,22 @@ class Stockfish2:
 
         #print("min")
         if b.is_game_over() or depth == 0:
-            value = -self.heuristics(b)
+            value = self.heuristics(b)
             self.store_value(b, value)
             return value
-                
+
         best = inf
 
         moves = b.legal_moves()
-        ordered_moves = self.order_moves(b, moves)    
-        
+        ordered_moves = self.order_moves(b, moves)
+
         for i in ordered_moves:
             b.push(i[0])
             best = min(best, self.max_min(b, alpha, beta, depth-1))
+            self._visited_nodes += 1
             beta = min(best, beta)
             b.pop()
-                    
+
             if beta <= alpha:
                 break
 
@@ -148,14 +152,15 @@ class Stockfish2:
         best = -inf
 
         moves = b.legal_moves()
-        ordered_moves = self.order_moves(b, moves)    
-        
+        ordered_moves = self.order_moves(b, moves)
+
         for i in ordered_moves:
             b.push(i[0])
             best = max(best, self.min_max(b, alpha, beta, depth))
             alpha = max(best, alpha)
+            self._visited_nodes += 1
             b.pop()
-            
+
             if beta <= alpha:
                 break
 
@@ -167,7 +172,7 @@ class Stockfish2:
         result = 0
         corner = b._boardsize-1
         board = b._board
-        
+
         if board[0][0] == self._player:
             result += 3
         if board[0][corner] == self._player:
