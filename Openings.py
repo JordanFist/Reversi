@@ -189,5 +189,5 @@ class Openings:
                         "0000000000"] = [self.__WHITE, 6, 3]
 
 
-b = Board(10)
-openings = Openings(10)
+#b = Board(10)
+#openings = Openings(10)
