@@ -20,16 +20,19 @@ class Openings:
 
         #for key, move in self.__openings.items():
         #    print(move)
-        #    for i in range(len(key)):
-        #        if (i != 0 and i % 10 == 0):
-        #            print()
-        #        print(key[i], end='')
-        #    print("\n")
+        #    self.printKey(key)
 
+    def printKey(self, key):
+            for i in range(len(key)):
+                if (i != 0 and i % 10 == 0):
+                    print()
+                print(key[i], end='')
+            print("\n")
 
     """ Returns a book move """
     def getOpeningMove(self, b):
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
+        self.printKey(key)
         if (key in self.__openings):
             return self.__openings[key]
         return None
@@ -108,7 +111,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__BLACK, 5, 3]
+                        "0000000000"] = [self.__BLACK, 4, 6]
 
         # Depth = 2
         self.__openings["0000000000"
