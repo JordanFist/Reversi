@@ -60,7 +60,6 @@ class Stockfish2:
 
         openingMove = self._openings.getOpeningMove(b)
         if (openingMove != None):
-            print(openingMove)
             return openingMove
 
         while (depth < 6):
