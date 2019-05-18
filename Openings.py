@@ -32,7 +32,6 @@ class Openings:
     """ Returns a book move """
     def getOpeningMove(self, b):
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
-        self.printKey(key)
         if (key in self.__openings):
             return self.__openings[key]
         return None
@@ -111,7 +110,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__BLACK, 4, 6]
+                        "0000000000"] = [self.__BLACK, 6, 4]
 
         # Depth = 2
         self.__openings["0000000000"
@@ -123,7 +122,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__BLACK, 3, 4]
+                        "0000000000"] = [self.__BLACK, 4, 3]
         self.__openings["0000000000"
                         "0000000000"
                         "0000000000"
@@ -133,7 +132,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__BLACK, 6, 4]
+                        "0000000000"] = [self.__BLACK, 4, 6]
         self.__openings["0000000000"
                         "0000000000"
                         "0000000000"
@@ -143,7 +142,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__BLACK, 4, 6]
+                        "0000000000"] = [self.__BLACK, 6, 4]
 
     """ Adds white book moves in the dictionnary """
     def whiteData(self):
@@ -157,7 +156,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__WHITE, 6, 3]
+                        "0000000000"] = [self.__WHITE, 3, 6]
         # Depth = 2
         self.__openings["0000000000"
                         "0000000000"
@@ -168,7 +167,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__WHITE, 4, 3]
+                        "0000000000"] = [self.__WHITE, 3, 4]
         self.__openings["0000000000"
                         "0000000000"
                         "0000000000"
@@ -178,7 +177,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__WHITE, 4, 3]
+                        "0000000000"] = [self.__WHITE, 3, 4]
         self.__openings["0000000000"
                         "0000000000"
                         "0000000000"
@@ -188,7 +187,7 @@ class Openings:
                         "0000100000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__WHITE, 5, 2]
+                        "0000000000"] = [self.__WHITE, 2, 5]
         self.__openings["0000000000"
                         "0000000000"
                         "0000000000"
@@ -198,7 +197,7 @@ class Openings:
                         "0000000000"
                         "0000000000"
                         "0000000000"
-                        "0000000000"] = [self.__WHITE, 5, 2]
+                        "0000000000"] = [self.__WHITE, 2, 5]
 
 
 #b = Board(10)
