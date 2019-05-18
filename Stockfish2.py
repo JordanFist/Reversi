@@ -25,6 +25,9 @@ class Stockfish2:
         self._openings = Openings(size)
 
         self._coef = 3
+        self._static_edge_values=[[700, 1200, 1000, 1000, 1000, 1000, 1000, 1000, 1200, 700],
+                           [700, 200, 200, 200, 200, 200, 200, 200, 200, 700],
+                           [700, -25, 75, 50, 50, 50, 50, 75, -25, 700]]
 
 
     def update_time(self, duration):
@@ -191,6 +194,47 @@ class Stockfish2:
 
     def mobility(self, b):
         return len(b.legal_moves()*2)
+
+
+    def edge_stability(self,b):
+
+
+
+        def probability(edge, pos):
+            return 1
+
+        def partial_edge_stability(edge):
+                if is_filled(edge):
+                    return sum( val for val in _static_edge_values)
+                max_stability = -inf
+                curr_stability = probability(edge, pos)
+        def get_edge(i):
+            #0 is the northen edge
+            #1 is the eastern edge
+            #2 is the southern edge
+            #3 is the western edge
+            if i ==0:
+                return self._board[0]
+            elif i == 2:
+                return self._board[-1]
+            elif i == 3:
+                l=[]
+                for i in range(self._boardsize):
+                    l.append(self._board[i][-1])
+                return l
+            elif i== 4:
+                l=[]
+                for i in range(self._boardsize):
+                    l.append(self._board[i][0])
+                return l
+
+        def is_filled(edge):
+            for c in get_edge(edge):
+                if c == self.board._EMPTY:
+                    return False
+            return True
+
+
 
     def disks(self, b):
         player = b._nextPlayer
