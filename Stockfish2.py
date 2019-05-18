@@ -4,7 +4,7 @@ import math
 from random import randint,choice
 from numpy import inf
 import re
-
+from Openings import Openings
 
 class Stockfish2:
 
@@ -22,6 +22,7 @@ class Stockfish2:
         self._remaining_time = 300
         self._max_time = self._remaining_time/self._remaining_turns
         self._dict = {}
+        self._openings = Openings(size)
 
         self._coef = 3
 
@@ -56,6 +57,11 @@ class Stockfish2:
         depth = self._initial_depth
         expo = 0
         estimated_duration = 0
+
+        openingMove = self._openings.getOpeningMove(b)
+        if (openingMove != None):
+            print(openingMove)
+            return openingMove
 
         while (depth < 6):
             start = time.time()
