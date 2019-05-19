@@ -3,7 +3,8 @@
 ''' Fichier de règles du Reversi pour le tournoi Inge2 Enseirb en IA.
     Certaines parties de ce code sont fortement inspirée de 
     https://inventwithpython.com/chapter15.html
-'''
+
+    '''
 
 class Board:
     _BLACK = 1
@@ -26,6 +27,7 @@ class Board:
       self._board[_middle][_middle] = self._BLACK 
       
       self._stack= []
+      self._successivePass = 0
 
     def reset(self):
         self.__init__()
@@ -42,9 +44,10 @@ class Board:
 
     # Vérifie si player a le droit de jouer en (x,y)
     def is_valid_move(self, player, x, y):
+        if x == -1 and y == -1:
+            return not self.at_least_one_legal_move(player)
         return self.lazyTest_ValidMove(player,x,y)
 
-    # Indique si les coordonéees (x, y) sont sur le plateau
     def _isOnBoard(self,x,y):
         return x >= 0 and x < self._boardsize and y >= 0 and y < self._boardsize 
 
@@ -142,7 +145,9 @@ class Board:
         if x==-1 and y==-1: # pass
             self._nextPlayer = self._flip(player)
             self._stack.append([move, []])
+            self._successivePass += 1
             return
+        self._successivePass = 0
         toflip = self.testAndBuild_ValidMove(player,x,y)
         self._stack.append([move,toflip])
         self._board[x][y] = player
@@ -162,6 +167,9 @@ class Board:
         [player,x,y] = move
         self._nextPlayer = player 
         if len(toflip) == 0: # pass
+            assert x == -1 and y == -1
+            assert self._successivePass > 0
+            self._successivePass -= 1
             return
         self._board[x][y] = self._EMPTY
         for xf,yf in toflip:
@@ -202,16 +210,6 @@ class Board:
             return self._nbWHITE - self._nbBLACK
         return self._nbBLACK - self._nbWHITE
 
-    # Retourne le gagnant de la partie
-    def get_winner(self):
-        score = self.get_nb_pieces()
-        if score[0] > score[1]:
-            print("Whites win")
-        elif score[1] > score[0]:
-            print("Blacks win")
-        else:
-            print("Draw")
-
     def _piece2str(self, c):
         if c==self._WHITE:
             return 'O'
@@ -220,7 +218,6 @@ class Board:
         else:
             return '.'
 
-    # print(board)
     def __str__(self):
         toreturn=""
         for l in self._board:
@@ -229,6 +226,9 @@ class Board:
             toreturn += "\n"
         toreturn += "Next player: " + ("BLACK" if self._nextPlayer == self._BLACK else "WHITE") + "\n"
         toreturn += str(self._nbBLACK) + " blacks and " + str(self._nbWHITE) + " whites on board\n"
+        toreturn += "(successive pass: " + str(self._successivePass) + " )"
         return toreturn
 
     __repr__ = __str__
+
+

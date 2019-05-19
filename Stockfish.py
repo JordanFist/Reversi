@@ -1,28 +1,85 @@
-from Reversi import Board
+import Reversi
 import time
 import math
 from random import randint,choice
 from numpy import inf
 import re
+from Openings import Openings
+from playerInterface import *
 
 
-class Stockfish:
-    
-    _initial_depth = 2
+
+class Stockfish(PlayerInterface):
+
+    _initial_depth = 1
     _last_duration = 0
 
-    UNKNOWN = -10000
-    
-    def __init__(self, player, size):
-        self._player = player
-        self._remaining_turns = size**2/2
+    UNKNOWN_MAX = inf
+    UNKNOWN_MIN = -inf
+
+    _turn = 0
+    _visited_nodes = 0
+
+    def __init__(self):
+
+        self._board = Reversi.Board(10)
+        self._remaining_turns = 96
         self._remaining_time = 300
         self._max_time = self._remaining_time/self._remaining_turns
         self._dict = {}
-        
-        self._coef = 3
+        self._openings = Openings(10)
 
-        
+        self._static_edge_values=[[700, 1200, 1000, 1000, 1000, 1000, 1000, 1000, 1200, 700],
+                           [700, 200, 200, 200, 200, 200, 200, 200, 200, 700],
+                           [700, -25, 75, 50, 50, 50, 50, 75, -25, 700]]
+
+    def getPlayerName(self):
+        return "Stockfish"
+
+    def getPlayerMove(self):
+
+        duration = 0
+        depth = self._initial_depth
+        expo = 0
+        estimated_duration = 0
+
+        openingMove = self._openings.getOpeningMove(self._board)
+        if (openingMove != None):
+            self._board.push(openingMove)
+            move = (openingMove[1], openingMove[2])
+            return move
+
+        while (depth < 4):
+            start = time.time()
+            best = self.search(self._board, depth)
+            end = time.time()
+            duration += end-start
+            depth += 1
+            expo = math.log(duration, depth)
+            estimated_duration = duration + depth**(expo+0.5)
+
+        self.update_time(duration)
+
+        self._board.push(best)
+        move = (best[1],best[2])
+        return move
+
+    def playOpponentMove(self, x,y):
+        assert(self._board.is_valid_move(self._opponent, x, y))
+        print("Opponent played ", (x,y))
+        self._board.push([self._opponent, x, y])
+
+    def newGame(self, color):
+        self._player = color
+        self._opponent = 1 if color == 2 else 2
+
+    def endGame(self, winner):
+        if self._player == winner:
+            print("Stockfish won't be stopped!!!")
+        else:
+            print("...")
+
+            
     def update_time(self, duration):
         self._remaining_time -= duration
         self._remaining_turns -= 1
@@ -32,43 +89,21 @@ class Stockfish:
     def store_value(self, b, value):
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
         self._dict[key] = value
-#        print("guardando em " + key)
-        
+
     def load_value(self, b):
-        
         key = re.sub('\ |\[|\]|\,', '', str(b._board))
- #       print("catando em " + key)
         if key in self._dict:
             return self._dict[key]
         else:
-            return self.UNKNOWN
-
-        
-    def getPlayerMove(self, b):
-
-        duration = 0
-        depth = self._initial_depth
-        expo = 0
-        estimated_duration = 0
-        
-        while (depth < 5):
-            start = time.time()
-            best = self.best_move(b, depth)
-            end = time.time()
-            duration += end-start
-            depth += 1
-            expo = math.log(duration, depth)
-            estimated_duration = duration + depth**(expo+0.5)
-
-            
-        print("Stockfish: " + str(round(50-self._remaining_turns)) + " - " + str(duration)+ "s")
-
-        self.update_time(duration)        
-        return best
-
+            if self._player == b._nextPlayer: # c'est max qui joue
+                return self.UNKNOWN_MAX
+            else:
+                return self.UNKNOWN_MIN
 
     def order_moves(self, b, before):
 
+
+        self._visited_nodes += 1
         moves = []
         for i in before: # for each move
             b.push(i) # we make the move
@@ -77,72 +112,82 @@ class Stockfish:
             b.pop() # we go back to the previous state of the board
 
         rev = b._nextPlayer == self._player # if it's our turn (maxmin), we want it ordered descendingly
-        result = sorted(moves, key=lambda x: x[1], reverse=rev) 
 
+        result = sorted(moves, key=lambda x: x[1], reverse=rev)
         return result
-        
-    def best_move(self, b, depth):
-        
+
+    def search(self, b, depth):
+
         alpha = -inf
         beta = inf
         best = alpha
+        self._turn += 1
 
         moves = b.legal_moves()
-    
-        for i in moves:
-            b.push(i)
+        ordered_moves = self.order_moves(b, moves)
+
+        for i in ordered_moves:
+            b.push(i[0])
             best = max(best, self.min_max(b, alpha, beta, depth-1))
-            
             if (best > alpha):
-                move = i
+                move = i[0]
             alpha = max(best, alpha)
             b.pop()
             if beta <= alpha:
                 break
 
+        self.store_value(b, best)
         return move
 
 
-    def min_max(self, b, alpha, beta, depth): # c'est au adversaire de jouer
-        
+    def min_max(self, b, alpha, beta, depth):
+
         if b.is_game_over() or depth == 0:
-            value = -self.heuristique(b)
+            value = self.heuristics(b)
+            self.store_value(b, value)
             return value
-                
+
         best = inf
 
         moves = b.legal_moves()
-                
-        for i in moves:
-            b.push(i)
+        ordered_moves = self.order_moves(b, moves)
+
+        for i in ordered_moves:
+            b.push(i[0])
             best = min(best, self.max_min(b, alpha, beta, depth-1))
+            self._visited_nodes += 1
             beta = min(best, beta)
             b.pop()
 
             if beta <= alpha:
                 break
-            
+
+        self.store_value(b, best)
         return best
 
-    def max_min(self, b, alpha, beta, depth): # c'est a toi de jouer
-        
+    def max_min(self, b, alpha, beta, depth):
+
         if b.is_game_over() or depth == 0:
-            value = self.heuristique(b)
+            value = self.heuristics(b)
+            self.store_value(b, value)
             return value
 
         best = -inf
 
         moves = b.legal_moves()
-                
-        for i in moves:
-            b.push(i)
-            best = max(best, self.min_max(b, alpha, beta, depth))
+        ordered_moves = self.order_moves(b, moves)
+
+        for i in ordered_moves:
+            b.push(i[0])
+            best = max(best, self.min_max(b, alpha, beta, depth-1))
             alpha = max(best, alpha)
+            self._visited_nodes += 1
             b.pop()
-            self.store_value(b, best)
-            
+
             if beta <= alpha:
                 break
+
+        self.store_value(b, best)
         return best
 
 
@@ -150,7 +195,7 @@ class Stockfish:
         result = 0
         corner = b._boardsize-1
         board = b._board
-        
+
         if board[0][0] == self._player:
             result += 3
         if board[0][corner] == self._player:
@@ -163,7 +208,48 @@ class Stockfish:
         return result
 
     def mobility(self, b):
-        return len(b.legal_moves())
+        return len(b.legal_moves()*2)
+
+
+    def edge_stability(self,b):
+
+
+
+        def probability(edge, pos):
+            return 1
+
+        def partial_edge_stability(edge):
+                if is_filled(edge):
+                    return sum( val for val in _static_edge_values)
+                max_stability = -inf
+                curr_stability = probability(edge, pos)
+        def get_edge(i):
+            #0 is the northen edge
+            #1 is the eastern edge
+            #2 is the southern edge
+            #3 is the western edge
+            if i ==0:
+                return self._board[0]
+            elif i == 2:
+                return self._board[-1]
+            elif i == 3:
+                l=[]
+                for i in range(self._boardsize):
+                    l.append(self._board[i][-1])
+                return l
+            elif i== 4:
+                l=[]
+                for i in range(self._boardsize):
+                    l.append(self._board[i][0])
+                return l
+
+        def is_filled(edge):
+            for c in get_edge(edge):
+                if c == self.board._EMPTY:
+                    return False
+            return True
+
+
 
     def disks(self, b):
         player = b._nextPlayer
@@ -171,6 +257,6 @@ class Stockfish:
             return b._nbWHITE - b._nbBLACK
         return b._nbBLACK - b._nbWHITE
 
-
-    def heuristique(self, b):
-        return self.mobility(b)+self.corners(b)+self.disks(b)
+    def heuristics(self, b):
+        value = self.mobility(b)+self.corners(b)+self.disks(b)
+        return value
