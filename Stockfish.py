@@ -244,10 +244,16 @@ class Stockfish(PlayerInterface):
                     s+=1
             return s/( (2*radius+1) * (radius+1) -1 )
 
-        def partial_edge_stability(edge):
+
+        def partial_edge_stability(edge, no_move=False):
                 if is_filled(edge):
                     return sum( val for val in _static_edge_values)
                 max_stability = -inf
+                l=b.legal_moves()
+                if l[0][1:] == [-1,-1]:
+                    b.push(l[0])
+                    curr_stability = partial_edge_stability(edge, no_move=True)
+                moves = [move for move in  if move in edge[0]
                 curr_stability = probability(edge, pos)
         def get_edges():
             print("################# GET EDGES##################")
