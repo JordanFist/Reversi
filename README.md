@@ -33,3 +33,6 @@ avec:
 -poids_position() Cette fonction retourne une constante car l'importance des emplacements sur la grille est la même tout au long de la partie.
 -disques() Retourne une valeur entre 0 et 1 représentant la domination du joueur courant par rapport à l'autre.
 -poids_disques(n) cette fonction est décroissante en le nombre de tours restants.
+
+
+Le code est disponible à https://github.com/JordanFist/Reversi
