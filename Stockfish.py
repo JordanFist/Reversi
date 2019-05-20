@@ -59,7 +59,7 @@ class Stockfish(PlayerInterface):
             return move
 
 
-        while estimated_duration < self._max_duration and depth <= 20: #s'il arrive a 20 c'est parce que le jeu est termine et il cherche rien
+        while estimated_duration < self._max_duration and depth <= 4: #s'il arrive a 20 c'est parce que le jeu est termine et il cherche rien
             start = time.time()
             best = self.search(self._board, depth)
             self._best_move = best
@@ -214,17 +214,18 @@ class Stockfish(PlayerInterface):
         return best
 
     def heuristics(self, b):
-        if self._remaining_turns<15:
-            m=1
-            c=4
-            p=3
-            d=3
-        else:
-            m=3
-            c=4
-            p=3
-            d=1
-        value = m*self.mobility(b)+c*self.corners(b)+p*self.position(b)+d*self.disks(b)
+        def p_weight():
+            return 3
+        def c_weight():
+            return 4
+        def m_weight():
+            return self._remaining_turns*4/48
+        def d_weight(b):
+            return 3
+        value = m_weight()*self.mobility(b)
+                + c_weight()*self.corners(b)
+                + p_weight*self.position(b)
+                + d_weight()*self.disks(b)
         return value
 
     def corners(self, b):
@@ -278,18 +279,5 @@ class Stockfish(PlayerInterface):
     def disks(self, b):
         player = b._nextPlayer
         if player is b._WHITE:
-            return b._nbWHITE - b._nbBLACK
-        return b._nbBLACK - b._nbWHITE
-
-        """def stability(self, b):
-
-            def is_stable(pos):
-                neighbords= [[i,j] for i in range(pos[0]-1, pos[0]+2) for j in range(pos[1]-1, pos[1]+2) if (0<=i<10 and 0<=j<10 and [i,j] !=pos)]
-                moves = b.legal_moves()
-                if len(moves)==1 and moves[0][1:]==[-1,-1]:
-                    return True
-                for move in moves:
-                    if pos in b.testAndBuild_ValidMove(b._nextPlayer, move[1], move[2]):
-                        return False
-                return True
-        """
+            return (b._nbWHITE - b._nbBLACK)/(b._nbWHITE + b._nbBLACK)
+        return (b._nbBLACK - b._nbWHITE)/(b._nbWHITE + b._nbBLACK)
