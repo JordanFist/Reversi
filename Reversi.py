@@ -45,6 +45,7 @@ class Board:
     # Vérifie si player a le droit de jouer en (x,y)
     def is_valid_move(self, player, x, y):
         if x == -1 and y == -1:
+            print("aqui")
             return not self.at_least_one_legal_move(player)
         return self.lazyTest_ValidMove(player,x,y)
 
@@ -144,12 +145,12 @@ class Board:
         assert player == self._nextPlayer
         if x==-1 and y==-1: # pass
             self._nextPlayer = self._flip(player)
-            self._stack.append([move, []])
+            self._stack.append([move, self._successivePass, []])
             self._successivePass += 1
             return
-        self._successivePass = 0
         toflip = self.testAndBuild_ValidMove(player,x,y)
-        self._stack.append([move,toflip])
+        self._stack.append([move, self._successivePass, toflip])
+        self._successivePass = 0
         self._board[x][y] = player
         for xf,yf in toflip:
             self._board[xf][yf] = self._flip(self._board[xf][yf])
@@ -163,13 +164,11 @@ class Board:
             self._nextPlayer = self._BLACK
 
     def pop(self):
-        [move, toflip] = self._stack.pop()
+        [move, self._successivePass, toflip] = self._stack.pop()
         [player,x,y] = move
         self._nextPlayer = player 
         if len(toflip) == 0: # pass
             assert x == -1 and y == -1
-            assert self._successivePass > 0
-            self._successivePass -= 1
             return
         self._board[x][y] = self._EMPTY
         for xf,yf in toflip:

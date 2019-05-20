@@ -1,6 +1,9 @@
 from Reversi import Board
 import re
 
+""" This file allows our IA to play the first three moves instantly thanks to a dictionnary of openings for black and white players"""
+""" A key represents the board as a string """
+
 class Openings:
     __BLACK = 1
     __WHITE = 2
@@ -17,11 +20,6 @@ class Openings:
         self.whiteData()
         
         self.addAllSymmetries()
-        #for key, move in self.__openings.items():
-        #    i += 1
-        #    print(i)
-        #    print(move)
-        #    self.printKey(key)
 
     """ Prints the key """
     def printKey(self, key):
