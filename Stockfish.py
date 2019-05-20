@@ -200,6 +200,19 @@ class Stockfish(PlayerInterface):
         self.store_value(b, best)
         return best
 
+    def heuristics(self, b):
+        if self._remaining_turns<15:
+            m=1
+            c=3
+            p=2
+            d=2
+        else:
+            m=3
+            c=3
+            p=2
+            d=1
+        value = m*self.mobility(b)+c*self.corners(b)+p*self.position(b)+d*self.disks(b)
+        return value
 
     def corners(self, b):
         result = 0
@@ -249,15 +262,26 @@ class Stockfish(PlayerInterface):
         return (s1-s2)/(s1+s2)
 
 
-        def disks(self, b):
-            player = b._nextPlayer
-            if player is b._WHITE:
-                return b._nbWHITE - b._nbBLACK
-            return b._nbBLACK - b._nbWHITE
+    def disks(self, b):
+        player = b._nextPlayer
+        if player is b._WHITE:
+            return b._nbWHITE - b._nbBLACK
+        return b._nbBLACK - b._nbWHITE
 
-        def heuristics(self, b):
-            value = 10*self.mobility(b)+50*self.corners(b)+6*self.position(b)
-            return value
+        """def stability(self, b):
+
+            def is_stable(pos):
+                neighbords= [[i,j] for i in range(pos[0]-1, pos[0]+2) for j in range(pos[1]-1, pos[1]+2) if (0<=i<10 and 0<=j<10 and [i,j] !=pos)]
+                moves = b.legal_moves()
+                if len(moves)==1 and moves[0][1:]==[-1,-1]:
+                    return True
+                for move in moves:
+                    if pos in b.testAndBuild_ValidMove(b._nextPlayer, move[1], move[2]):
+                        return False
+                return True
+        """
+
+
 
     """def edge_stability(self,b):
         edges=[]
