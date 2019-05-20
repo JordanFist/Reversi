@@ -59,7 +59,7 @@ class Stockfish(PlayerInterface):
             return move
 
 
-        while estimated_duration < self._max_duration and depth <= 4: #s'il arrive a 20 c'est parce que le jeu est termine et il cherche rien
+        while estimated_duration < self._max_duration and depth <= 20: #s'il arrive a 20 c'est parce que le jeu est termine et il cherche rien
             start = time.time()
             best = self.search(self._board, depth)
             self._best_move = best
@@ -220,12 +220,12 @@ class Stockfish(PlayerInterface):
             return 4
         def m_weight():
             return self._remaining_turns*4/48
-        def d_weight(b):
-            return 3
+        def d_weight():
+            return (1-self._remaining_turns)*4/48
         value = m_weight()*self.mobility(b)
-                + c_weight()*self.corners(b)
-                + p_weight*self.position(b)
-                + d_weight()*self.disks(b)
+        + c_weight()*self.corners(b)
+        + p_weight()*self.position(b)
+        + d_weight()*self.disks(b)
         return value
 
     def corners(self, b):
