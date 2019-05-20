@@ -215,13 +215,13 @@ class Stockfish(PlayerInterface):
 
     def heuristics(self, b):
         def p_weight():
-            return 3
+            return 4
         def c_weight():
             return 4
         def m_weight():
             return self._remaining_turns*4/48
         def d_weight():
-            return (1-self._remaining_turns)*4/48
+            return (49-self._remaining_turns)*2/48
         value = m_weight()*self.mobility(b)
         + c_weight()*self.corners(b)
         + p_weight()*self.position(b)
