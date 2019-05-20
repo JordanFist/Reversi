@@ -216,13 +216,13 @@ class Stockfish(PlayerInterface):
     def heuristics(self, b):
         if self._remaining_turns<15:
             m=1
-            c=3
-            p=2
-            d=2
+            c=4
+            p=3
+            d=3
         else:
             m=3
-            c=3
-            p=2
+            c=4
+            p=3
             d=1
         value = m*self.mobility(b)+c*self.corners(b)+p*self.position(b)+d*self.disks(b)
         return value
