@@ -215,7 +215,7 @@ class Stockfish(PlayerInterface):
 
     def heuristics(self, b):
         def p_weight():
-            return 4
+            return 6
         def c_weight():
             return 4
         def m_weight():
