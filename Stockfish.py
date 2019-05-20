@@ -29,9 +29,19 @@ class Stockfish(PlayerInterface):
         self._dict = {}
         self._openings = Openings(10)
 
-        self._static_edge_values=[[700, 1200, 1000, 1000, 1000, 1000, 1000, 1000, 1200, 700],
-                           [700, 200, 200, 200, 200, 200, 200, 200, 200, 700],
-                           [700, -25, 75, 50, 50, 50, 50, 75, -25, 700]]
+        self._static_values=[
+        [10,-3,2,1,0.8,0.8,1,2,-3,10],
+        [-3,-5,-0.450,-0.500,-0.500,-0.500,-0.500,-0.450,-5,-3],
+        [1,-0.45,0.030,20,10,10,20,30,-0.45,1],
+        [1,-0.45,0.030,0.020,0.010,0.010,0.020,0.030,-0.45,1],
+        [0.8,-0.5,0.01,0.01,0.05,0.05,0.01,0.01,-0.5,0.8],
+        [0.8,-0.5,0.01,0.01,0.05,0.05,0.01,0.01,-0.5,0.8],
+        [1,-0.45,0.030,0.020,0.010,0.010,0.020,0.030,-0.45,1],
+        [1,-0.45,0.030,20,10,10,20,30,-0.45,1],
+        [-3,-5,-0.450,-0.500,-0.500,-0.500,-0.500,-0.450,-5,-3],
+        [10,-3,2,1,0.8,0.8,1,2,-3,10]
+        ]
+
 
     def getPlayerName(self):
         return "Stockfish"
@@ -197,21 +207,71 @@ class Stockfish(PlayerInterface):
         board = b._board
 
         if board[0][0] == self._player:
-            result += 3
+            result += 1
         if board[0][corner] == self._player:
-            result += 3
+            result += 1
         if board[corner][0] == self._player:
-            result += 3
+            result += 1
         if board[corner][corner] == self._player:
-            result += 3
+            result += 1
 
-        return result
+        return result/4
 
     def mobility(self, b):
-        return len(b.legal_moves()*2)
+        moves = b.legal_moves()
+        m=len(moves)
+        if m == 1 and moves[1:] == [-1,-1]:
+            return 0
+        s=0
+        for move in moves:
+            b.push(move)
+            tmp_moves=b.legal_moves()
+            n=len(tmp_moves)
+            if n == 1 and tmp_moves[1:] == [-1,-1]:
+                s+=0
+            else:
+                s+=n
+            b.pop()
+        n=s/m
+        return (m-n)/(m+n)
+
+    def position(self, b):
+        s1 =0
+        s2=0
+        for i in range(b._boardsize):
+            for j in range(b._boardsize):
+                if b._board[i][j] == b._nextPlayer:
+                    s1+= self._static_values[i][j]
+                elif b._board[i][j] == b._flip(b._nextPlayer):
+                    s2+=1
+        if (s1+s2)<0 and s2<0:
+            return 1
+        return (s1-s2)/(s1+s2)
 
 
-    def edge_stability(self,b):
+        def disks(self, b):
+            player = b._nextPlayer
+            if player is b._WHITE:
+                return b._nbWHITE - b._nbBLACK
+            return b._nbBLACK - b._nbWHITE
+
+        def heuristics(self, b):
+            value = 10*self.mobility(b)+50*self.corners(b)+6*self.position(b)
+            return value
+
+    """def edge_stability(self,b):
+        edges=[]
+        def get_edges():
+            #the northen edge
+            edges.append([[0,i] for i in range(b._boardsize)])
+            #the eastern edge
+            edges.append( [[i, b._boardsize] for i in range(b._boardsize)])
+            #the southern edge
+            edges.append([[b._boardsize,i] for i in range(b._boardsize)])
+            print(edges[2])
+            #the western edge
+            edges.append([[i, 0] for i in range(b._boardsize)])
+
 
         def is_corner(pos):
             if pos[0]==0 and (pos[1] == 0 or pos[1] == b._boardsize):
@@ -245,58 +305,52 @@ class Stockfish(PlayerInterface):
             return s/( (2*radius+1) * (radius+1) -1 )
 
 
-        def partial_edge_stability(edge, no_move=False):
+        def partial_edge_stability(edge):
                 if is_filled(edge):
                     return sum( val for val in _static_edge_values)
                 max_stability = -inf
                 l=b.legal_moves()
-                if l[0][1:] == [-1,-1]:
-                    b.push(l[0])
-                    curr_stability = partial_edge_stability(edge, no_move=True)
-                moves = [move for move in  if move in edge[0]
-                curr_stability = probability(edge, pos)
+                moves = [move for move in l if (move in edge[0] or move[1:] == [-1,-1]]
+                if moves==[] and is_empty(edge):
+                    return 0.5
+                for move in moves:
+                    b.push(move)
+                    current_stability= probability(edge, move[1:])*partial_edge_stability(edge)
+
+                #curr_stability = probability(edge, pos)
+        def static_value(edge_index):
+            edge= edges
+
         def get_edges():
-            print("################# GET EDGES##################")
             edges=[]
             #the northen edge
             edges.append([ [[0,i] for i in range(b._boardsize)], b._board[0]])
-            #print("#")
-            #print(b._board)
-            #print(edges[0])
-            #print("#")
-            #the eastern edge
-            l=[]
             for i in range(b._boardsize):
-                l.append(b._board[i][-1])
+                #print(lesedges[0])
+                #print(edges[0][0][i] + " " + )
+            #the eastern edge
+            l=[b._board[i][-1] for i in range(b._boardsize)]
             edges.append( [[[i, b._boardsize] for i in range(b._boardsize)], l])
-            #print(edges[1])
+            print(edges[1])
             #the southern edge
             edges.append([ [[b._boardsize,i] for i in range(b._boardsize)], b._board[-1]])
-            #print(edges[2])
+            print(edges[2])
             #the western edge
             l=[]
             for i in range(b._boardsize):
                 l.append(b._board[i][0])
             edges.append( [[[i, 0] for i in range(b._boardsize)], l])
-            #print(edges)
-            print("################# GET EDGES##################")
+            print(edges)
 
+        def is_empty(edge):
+            for c in get_edge(edge):
+                if c != b.board._EMPTY:
+                    return False
+            return True
         def is_filled(edge):
             for c in get_edge(edge):
                 if c == b.board._EMPTY:
                     return False
             return True
-
         get_edges()
-        return 1
-
-
-    def disks(self, b):
-        player = b._nextPlayer
-        if player is b._WHITE:
-            return b._nbWHITE - b._nbBLACK
-        return b._nbBLACK - b._nbWHITE
-
-    def heuristics(self, b):
-        value = self.mobility(b)+self.corners(b)+self.disks(b)+self.edge_stability(b)
-        return value
+        return 1"""
