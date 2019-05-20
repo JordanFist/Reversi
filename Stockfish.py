@@ -59,7 +59,7 @@ class Stockfish(PlayerInterface):
             return move
 
 
-        while estimated_duration < self._max_duration and depth <= 20: #s'il arrive a 20 c'est parce que le jeu est termine et il cherche rien
+        while estimated_duration < self._max_duration: #s'il arrive a 20 c'est parce que le jeu est termine et il cherche rien
             start = time.time()
             best = self.search(self._board, depth)
             self._best_move = best
