@@ -1,6 +1,9 @@
-# Reversi
+# Reversi or Othello
 
-##Recherche:
+## English version
+Python project using Minimax, Alpha-beta pruning and iterative deepening in order to implement a Reversi AI. We also added an opening dictionary.
+
+## Recherche:
 La recherche est faite par un algorithme minmax avec élagage alpha-beta et iterative deepening. Pour les 3 premiers coups, le groupe a implémenté des ouvertures (qui sont expliqués ensuite).
 
 Après, pour chaque coup, l'algorithme fait une recherche en profondeur 1. Sachant que le temps est exponentiell en rélation à la profondeur, nous cherchons le x tel que x**profondeur = temps passé. Avec cette valeur x, nous estimons le temps pour faire profondeur+1 et, si cette valeur ne dépasse pas un limite pré-établi, la recherche recommence avec profondeur +1. Encore, pour essayer de s'approcher plus d'une bonne estimation, nous divisons le temps calculé passé à la profondeur actuel pour l'estimation faite avant. Le résultat est un coefficient pour lequel nous multiplierons la prochaine estimation.
