@@ -1,4 +1,4 @@
-# Reversi or Othello
+# Reversi or Othello 
 
 Python project using Minimax, Alpha-beta pruning and iterative deepening in order to implement a Reversi AI. We also added an opening dictionary.
 
